@@ -100,7 +100,6 @@ def getPermutationT(s=None):
         P[index] = temp
     
     P += P
-    print(P)
     return P
 
 seed = random.seed(input("Seed (can be left empty): "))
