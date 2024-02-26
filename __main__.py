@@ -102,7 +102,14 @@ def getPermutationT(s=None):
     P += P
     return P
 
-seed = random.seed(input("Seed (can be left empty): "))
+seed = input("Seed (can be left empty): ")
+
+# generation of a random seed if none is given.
+if seed == "":
+    seed = random.randint(random.randint(0,65536),random.randint(65537,131072))
+else:
+    random.seed(seed)
+
 P = getPermutationT(seed)
 
 def perlin(x, y): 
@@ -194,8 +201,9 @@ def movement(x, y):
         x -= 1/res
     elif s.startswith("A"):
         x -= 1
-    elif s == "e" or s == "E":
+    elif s.startswith("e") or s.startswith("E"):
         console.print(f"Seed: {seed}")
+        input("You can now close this window with Enter.") 
         exit()
 
     generateMap(x, y)
