@@ -36,6 +36,13 @@ def getPermutationT():
 
 def perlin(x, y, P): 
     """ generates perlin noise for a single pixel using a given Permutation table `P` """
+    #! kinda fixes the negative number issue? not really                                                     
+    """         
+    if x < 0: 
+        x *= -1
+    if y < 0:
+        y *= -1
+    """
        
     def get_constant_vect(v):
         h = v % 3
@@ -48,10 +55,11 @@ def perlin(x, y, P):
         else:
             return vect2( 1.0,-1.0)
 
-    X = int(x) % 255
-    Y = int(y) % 255
+    X = int(x) & 255
+    Y = int(y) & 255
     
-    xf = x - int(x)
+    
+    xf = x - int(x) 
     yf = y - int(y)
     
     topRight = vect2(xf-1.0, yf-1.0) 
@@ -72,6 +80,5 @@ def perlin(x, y, P):
     u = m.fade(xf)
     v = m.fade(yf)
     
-    brightness = m.lerp2(u, m.lerp2(v, dBotLeft, dTopLeft), m.lerp2(v, dBotRight, dTopRight))
-    return brightness
+    return m.lerp2(u, m.lerp2(v, dBotLeft, dTopLeft), m.lerp2(v, dBotRight, dTopRight))
 
