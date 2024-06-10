@@ -1,11 +1,13 @@
 # perlin-noise_python
-small perlin noise generation project in python using the rich module for a beautiful output.
+small perlin noise generation project in python using pygame for display
 
 ## Usage
-Movement on the Heightmap can be done with WASD
+Start the program and enter a seed if you want, it'll take a bit and then generate a map.
 
-lower case letters are used to move pixel by pixel
+After generating a map it'll try to generate the next frame every half second (tho probably not, due to it being inperformant)
+if that is done, it will say 'passed' in the terminal.
 
-and upper case for entire chunks
+in the next frame the whole map will be shifted by one chunk
 
-e/E are used to exit the programm which will then also output the seed of the map
+## Preview
+![image](https://github.com/Deadlocz/perlin-noise_python/assets/103319734/5f2d8d36-3462-4954-81ce-47cf4583dc05)
