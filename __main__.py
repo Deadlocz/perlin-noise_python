@@ -1,135 +1,111 @@
-import noise
-from rich.console import Console
-import time
+import pygame
+import sys
 
-""" default values """
-# x, y are "chunk coordinates"
-x = 0
-y = 0
-# res is the resolution the chunk is getting generated in
-res = 16
-# amount of chunks in width and height
-chunksW = 5
-chunksH = 3
+from noise import perlin, getPermutationT
 
-# console for color printing with rich.console
-console = Console()
-P, seed = noise.getPermutationT()
-
-def get_Color(value = 0, previous= 0):
-    """ gets the correct color value, for a heightmap, with the given value """
-
-    heightV = {1 : "red1", 0.9 : "orange_red1", 0.8 : "dark_orange", 0.7 : "orange1", 0.6: "gold1",
-         0.5: "yellow1", 0.4 : "yellow2", 0.3 : "green_yellow", 0.2 : "light_green", 0.1 : "aquamarine1",
-         0: "dark_slate_gray1", -0.1 : "sky_blue1", -0.2 : "sky_blue3", -0.3 : "cornflower_blue", -0.4 : "slate_blue3",
-         -0.5 : "purple3", -0.6 : "purple4", -0.7 : "dark_magenta", -0.8 : "dark_violet", -0.9 : "dark_magenta", -1 : "dark_magenta"}
-
-    if value >= -1 and value <= 1:
-        return heightV[round(value,1)]
-    elif previous >= -1 and previous <= 1:
-        return heightV[round(previous, 1)]
-    elif value > 1:
-        return heightV[1]
-    else:
-        return heightV[-1]
-    
-def chunkDisplay(listData, resolution, width):
-    """ generates a color 'heightmap' with the given data string """
-
-    chunk = ""
-    color = ""
-    previousValue = 0
-    for index, data in enumerate(listData):
-        
-        color = get_Color(data, previousValue)
-        if not(previousValue > 1 or previousValue < -1):
-            previousValue = data
-        
-        string = f"{'[' + color + ']'}##{'[/' + color + ']'}"
-        chunk += string
-        
-        if (index+1) % (resolution*width) == 0:
-            chunk += "\n"
-
-    return chunk    
-    
-
-def generateMap(x, y):
-    """ generates a heighmap with given brightness data - here perlin noise """    
-    
-    def FractalBrownianMotion(x, y, numOctaves):
-        """ Fractal Brownian Motion to create a more natural feel to the heightmap """
-        result = 0
-        amplitude = 1.0
-        frequency = 0.5
-        
-        
-        for o in range(numOctaves):
-            n = amplitude * noise.perlin((x if x > -0.1 else x*-1) * frequency, (y if y > -0.1 else y*-1) * frequency, P)
-            result += n
-
-            amplitude *= 0.5
-            frequency *= 2.0
-        
-        return result
+class Noise:
+    def __init__(self, res=64):
+            pygame.init()
             
-    data = []
-    chunks = []
-    
-    xB = x
-    
+            pygame.display.set_caption("Perlin Noise Tech Demo")
+            
+            self.res = res
+            
+            self.clock = pygame.time.Clock()
+            
+            self.screen = pygame.display.set_mode((1680, 945))
+            self.screen_size = self.screen.get_size()
+            self.display = pygame.Surface(((16 * self.res/3), (9 * self.res/3)))
+            self.display_size = self.display.get_size()
 
-    # freq res
-    for i in range(res*chunksH):
-        for j in range(res*chunksW):
-            pixel = round(FractalBrownianMotion(x, y, 8), 5)
-            data.append(pixel)
-            x += 1/res
+            self.permutation, self.seed = getPermutationT()
+            self.data = []
+    
+    def get_Color(self, value=0):
+        """ gets the correct color value, for a heightmap, with the given value """
+        heightV = {
+            1 : (255, 0, 0),
+            0.9 : (255, 102, 0),
+            0.8 : (255, 153, 51),
+            0.7 : (255, 204, 0),
+            0.6: (255, 255, 0),
+            0.5: (204, 255, 51),
+            0.4 : (153, 255, 51),
+            0.3 : (102, 255, 51), 
+            0.2 : (0, 255, 0), 
+            0.1 : (102, 255, 204),
+            0: (0, 255, 255), 
+            -0.1 : (0, 153, 255), 
+            -0.2 : (0, 102, 255), 
+            -0.3 : (102, 153, 255), 
+            -0.4 : (153, 153, 255),
+            -0.5 : (204, 102, 255), 
+            -0.6 : (153, 51, 255), 
+            -0.7 : (153, 0, 255), 
+            -0.8 : (102, 0, 204), 
+            -0.9 : (90, 0, 180), 
+            -1 : (102, 102, 153)
+        } 
+
+        #print(value)
+        if value >= -1 and value <= 1:
+            return heightV[round(value,1)]
+        elif value > 1:
+            return (255, 0, 0)
+        elif value < -1:
+            return (102, 102, 153)
+        else:
+            print(value)
+            return (0, 0, 0)
+
+    
+    def generateMap(self, x, y):
+        
+        def FractalBrownianMotion(x, y, numOctaves):
+            result = 0 
+            amplitude = 1.0
+            frequency = 0.5
+            
+            for o in range(numOctaves):
+                n = amplitude * perlin((x if x > -0.1 else x * -1) * frequency, (y if y > -0.1 else y * -1) * frequency, self.permutation)
+                result += n
+
+                amplitude *= 0.5
+                frequency *= 2.0
                 
-        y += 1/res
-        x = xB
+            return result 
+        xB = x
+    
+        for i in range(self.display_size[1]):
+            for j in range(self.display_size[0]):
+                pixel = round(FractalBrownianMotion(x, y, 4), 5)
+                x += 1/self.res
+                self.data.append([pixel, pygame.Rect(j, i, 1, 1)])
+                
+            y += 1/self.res
+            x = xB
 
-    chunks.insert(0,(chunkDisplay(data, res, chunksW)))
-    console.print(chunks[0])
-     
-def movement(x, y):
-    """ used for movement on the heigh map """
-    s = " "
-    mov = ["W", "A", "S", "D", "E", "e", "w", "a", "s", "d"]
-
-    while s[0] not in mov:
-        try:
-            console.print(f"note: x/y values in the negative will 'copy' the brightness of their positive values!")
-            s = str(input(f"Cords: x={x}, y={y} | WASD: "))
-        except ValueError as e:
-            console.print(f"{e} | please only input one of the following letters: WASD")
-        s += " "
-
-    # yes, I like long if else statements :^)
-    if s.startswith("w"):
-        y += 1/res
-    elif s.startswith("W"):
-        y += 1
-    elif s.startswith("d"):
-        x += 1/res
-    elif s.startswith("D"):
-        x += 1
-    elif s.startswith("s"):
-        y -= 1/res
-    elif s.startswith("S"):
-        y -= 1
-    elif s.startswith("a"):
-        x -= 1/res
-    elif s.startswith("A"):
-        x -= 1
-    elif s.startswith("e") or s.startswith("E"):
-        console.print(f"Seed: {seed}")
-        input("You can now close this window with Enter.") 
-        exit()
-
-    generateMap(x, y)
-    return x, y
-
-generateMap(x, y)
-while True:
-    x, y = movement(x, y)
+    def run(self):
+        x = 0
+        y = 0
+        while True:
+            self.display.fill((0, 0, 0))
+            self.generateMap(x, y)
+            
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+            
+            for rect in self.data:
+                color = self.get_Color(value=float(rect[0]))
+                pygame.draw.rect(self.display, color, rect[1])
+                
+            
+            self.screen.blit(pygame.transform.scale(self.display,self.screen.get_size()), (0, 0))
+            pygame.display.update()
+            self.clock.tick(2)
+            print("passed")
+            x += 1
+            
+Noise().run()
